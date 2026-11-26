@@ -1,0 +1,202 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "devices": {
+      ".read": false,
+      ".write": false
+    },
+    "admins": {
+      ".read": false,
+      ".write": false
+    },
+    "userHomes": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "$homeId": {
+          ".write": "auth != null && (auth.uid === $uid || root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid)"
+        }
+      }
+    },
+    "inviteCodes": {
+      ".read": "auth != null",
+      "$code": {
+        ".write": "auth != null"
+      }
+    },
+    "homes": {
+      "$homeId": {
+        ".read": "auth != null && (data.child('members').child(auth.uid).exists() || data.child('info/owner').val() === auth.uid || root.child('devices').child(auth.uid).val() === true)",
+        ".write": "auth != null && (!data.exists() || data.child('info/owner').val() === auth.uid || data.child('members').child(auth.uid).exists())",
+        "info": {
+          ".read": "auth != null",
+          ".write": "auth != null && (!data.exists() || root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid)"
+        },
+        "joinRequests": {
+          ".read": "auth != null && (root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid || data.child(auth.uid).exists())",
+          "$requesterUid": {
+            ".read": "auth != null && (auth.uid === $requesterUid || root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid)",
+            ".write": "auth != null && (auth.uid === $requesterUid || root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid)"
+          }
+        },
+        "members": {
+          ".read": "auth != null && (data.child(auth.uid).exists() || root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid)",
+          "$memberUid": {
+            ".write": "auth != null && (!root.child('homes').child($homeId).child('info').exists() || root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid || auth.uid === $memberUid)"
+          }
+        },
+        "devices": {
+          ".read": "auth != null && root.child('homes').child($homeId).child('members').child(auth.uid).exists()",
+          ".write": "auth != null && root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid"
+        },
+        "relays": {
+          ".read": "auth != null && (root.child('homes').child($homeId).child('members').child(auth.uid).exists() || root.child('devices').child(auth.uid).val() === true || root.child('homes').child($homeId).child('devices').child(auth.uid).val() === true)",
+          ".write": "auth != null && (root.child('homes').child($homeId).child('members').child(auth.uid).exists() || root.child('devices').child(auth.uid).val() === true || root.child('homes').child($homeId).child('devices').child(auth.uid).val() === true || !data.exists())",
+          "$relay": {
+            ".validate": "$relay.matches(/^relay([1-9]|[1-9][0-9])$/) && newData.isBoolean()"
+          }
+        },
+        "relayStatus": {
+          ".read": "auth != null && (root.child('homes').child($homeId).child('members').child(auth.uid).exists() || root.child('devices').child(auth.uid).val() === true || root.child('homes').child($homeId).child('devices').child(auth.uid).val() === true)",
+          ".write": "auth != null && (root.child('devices').child(auth.uid).val() === true || root.child('homes').child($homeId).child('devices').child(auth.uid).val() === true)",
+          "$relay": {
+            ".validate": "$relay.matches(/^relay([1-9]|[1-9][0-9])$/)",
+            "state": {
+              ".validate": "newData.isBoolean()"
+            },
+            "updatedAt": {
+              ".validate": "newData.isNumber()"
+            }
+          }
+        },
+        "device": {
+          ".read": "auth != null && root.child('homes').child($homeId).child('members').child(auth.uid).exists()",
+          ".write": "auth != null && (root.child('devices').child(auth.uid).val() === true || root.child('homes').child($homeId).child('devices').child(auth.uid).val() === true)"
+        },
+        "sensors": {
+          ".read": "auth != null && root.child('homes').child($homeId).child('members').child(auth.uid).exists()",
+          ".write": "auth != null && (root.child('devices').child(auth.uid).val() === true || root.child('homes').child($homeId).child('devices').child(auth.uid).val() === true)"
+        },
+        "sensorStatus": {
+          ".read": "auth != null && root.child('homes').child($homeId).child('members').child(auth.uid).exists()",
+          ".write": "auth != null && (root.child('devices').child(auth.uid).val() === true || root.child('homes').child($homeId).child('devices').child(auth.uid).val() === true)"
+        },
+        "history": {
+          ".read": "auth != null && root.child('homes').child($homeId).child('members').child(auth.uid).exists()",
+          ".write": "auth != null && (root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid || root.child('devices').child(auth.uid).val() === true || root.child('homes').child($homeId).child('devices').child(auth.uid).val() === true)",
+          "$id": {
+            ".validate": "!newData.exists() || newData.hasChildren(['ts'])"
+          }
+        },
+        "settings": {
+          ".read": "auth != null && root.child('homes').child($homeId).child('members').child(auth.uid).exists()",
+          ".write": "auth != null && root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid",
+          "rooms": {
+            ".write": "auth != null && root.child('homes').child($homeId).child('info').child('owner').val() === auth.uid",
+            "$room": {
+              ".validate": "newData.hasChildren(['name', 'createdAt'])",
+              "name": {
+                ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 30"
+              },
+              "createdAt": {
+                ".validate": "newData.isNumber()"
+              },
+              "devices": {
+                "$device": {
+                  ".validate": "newData.hasChildren(['name', 'type', 'relay'])",
+                  "name": {
+                    ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 30"
+                  },
+                  "type": {
+                    ".validate": "newData.isString() && newData.val().matches(/^(light|lamp|fan|ac|tv|heater|pump|plug)$/)"
+                  },
+                  "relay": {
+                    ".validate": "newData.isString() && newData.val().matches(/^relay([1-9]|1[0-6])$/)"
+                  },
+                  "$other": {
+                    ".validate": false
+                  }
+                }
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          },
+          "relayNames": {
+            "$relay": {
+              ".validate": "$relay.matches(/^relay([1-9]|1[0-6])$/) && newData.isString() && newData.val().length >= 1 && newData.val().length <= 30"
+            }
+          },
+          "relayIcons": {
+            "$relay": {
+              ".validate": "$relay.matches(/^relay([1-9]|1[0-6])$/) && newData.isString() && newData.val().length <= 20"
+            }
+          },
+          "temperature": {
+            "warn": {
+              ".validate": "newData.isNumber()"
+            },
+            "critical": {
+              ".validate": "newData.isNumber()"
+            }
+          }
+        },
+        "roomRequests": {
+          ".read": "auth != null && root.child('homes').child($homeId).child('members').child(auth.uid).exists()",
+          "$requestId": {
+            ".write": "auth != null && root.child('homes').child($homeId).child('members').child(auth.uid).exists()",
+            ".validate": "newData.hasChildren(['type', 'status', 'requesterUid', 'createdAt'])"
+          }
+        }
+      }
+    },
+    "relays": {
+      ".read": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('devices').child(auth.uid).val() === true)",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      "$relay": {
+        ".validate": "$relay.matches(/^relay([1-9]|1[0-6])$/) && newData.isBoolean()"
+      }
+    },
+    "relayStatus": {
+      ".read": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('devices').child(auth.uid).val() === true)",
+      ".write": "auth != null && root.child('devices').child(auth.uid).val() === true",
+      "$relay": {
+        ".validate": "$relay.matches(/^relay([1-9]|1[0-6])$/)",
+        "state": {
+          ".validate": "newData.isBoolean()"
+        },
+        "updatedAt": {
+          ".validate": "newData.isNumber()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "device": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('devices').child(auth.uid).val() === true"
+    },
+    "sensors": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('devices').child(auth.uid).val() === true"
+    },
+    "sensorStatus": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('devices').child(auth.uid).val() === true"
+    },
+    "history": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && (root.child('admins').child(auth.uid).val() === true || root.child('devices').child(auth.uid).val() === true)",
+      "$id": {
+        ".validate": "!newData.exists() || newData.hasChildren(['ts'])"
+      }
+    },
+    "settings": {
+      ".read": "auth != null && root.child('admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('admins').child(auth.uid).val() === true"
+    }
+  }
+}

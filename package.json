@@ -1,0 +1,10 @@
+{
+  "name": "smart-home-dashboard-root",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix smart-home-dashboard run dev",
+    "build": "npm --prefix smart-home-dashboard run build",
+    "preview": "npm --prefix smart-home-dashboard run preview"
+  }
+}
+
